@@ -1,26 +1,28 @@
 #!/usr/bin/env python
-from board import SCL, SDA
-import busio
+from __future__ import division
 
 # Import the PCA9685 module.
-from adafruit_pca9685 import PCA9685
+import Adafruit_PCA9685
 
-# Create the I2C bus interface.
-i2c_bus = busio.I2C(SCL, SDA)
-
-# Create a simple PCA9685 class instance.
-pca = PCA9685(i2c_bus, address=0x40)
+# Initialise the PCA9685 using the default address (0x40).
+pwm = Adafruit_PCA9685.PCA9685()
 
 # Set the PWM frequency to 60hz.
-pca.frequency = 60
+pwm.set_pwm_freq(60)
 
-pwm = pca.channels[4]
-fwd = pca.channels[6]
-rev = pca.channels[5]
+mot = 4
+fwd = 6
+rev = 5
 
-fwd.duty_cycle = 0xFFFF
-rev.duty_cycle = 0x0000
-pwm.duty_cycle = 0
+def duty_cycle(channel, cycle):
+    off = int(cycle / 0xFFFF * 4095)
+    pwm.set_pwm(channel, 0, off)
+    print("channel: %d on: %d off: %d" % (channel, 0, off))
+
+
+duty_cycle(fwd, 0xFFFF)
+duty_cycle(rev, 0x0000)
+duty_cycle(mot, 0)
 
 #if __name__ == '__main__':
 #    listener()

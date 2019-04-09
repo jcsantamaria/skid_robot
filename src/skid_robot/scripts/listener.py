@@ -4,6 +4,10 @@ import rospy
 from geometry_msgs.msg import Twist
 from drivetrain import DriveTrain
 
+# Robot drive train
+train = DriveTrain(4, 6, 5, 10, 12, 11, 9, 7, 8, 15, 14, 13)
+
+
 def callback(data):
     #rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data)
     train.drive( data.linear.x, data.angular.z)
@@ -16,9 +20,6 @@ def listener():
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
     rospy.init_node('listener', anonymous=True)
-
-    # Robot drive train
-    train = DriveTrain(4, 6, 5, 10, 12, 11, 9, 7, 8, 15, 14, 13)
 
     rospy.Subscriber('/cmd_vel', Twist, callback)
 

@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-from board import SCL, SDA
-import busio
+from __future__ import division
 
 # Import the PCA9685 module.
-from adafruit_pca9685 import PCA9685
+import Adafruit_PCA9685
+
 
 class Motor:
-    def __init__(self, pwm, fwd, rev):
+    def __init__(self, pca, pwm, fwd, rev):
+        self._pca = pca
         self._pwm = pwm
         self._fwd = fwd
         self._rev = rev
@@ -14,40 +15,45 @@ class Motor:
         self.stop()
 
     def stop(self):
-        self._fwd.duty_cycle = 0x0000
-        self._rev.duty_cycle = 0x0000
-        self._pwm.duty_cycle = 0x0000
+        self._pca.set_pwm(self._fwd, 0, 4096)
+        self._pca.set_pwm(self._rev, 0, 4096)
+        self._pca.set_pwm(self._pwm, 0, 4096)
 
     def move(self, speed):
-        f = 0xFFFF
-        r = 0x0000
+        f = True
+        r = False
         if speed > 0:
-            s = max(0, min(int(speed * 0xFFFF / 100), 0xFFFF))
+            s = max(0, min(int(speed * 4095 / 100), 4095))
         else:
-            s =  max(0, min(int(-speed * 0xFFFF / 100), 0xFFFF))
-            f = 0x0000
-            r = 0xFFFF
-        self._fwd.duty_cycle = f
-        self._rev.duty_cycle = r
-        self._pwm.duty_cycle = s
+            s =  max(0, min(int(-speed * 4095 / 100), 4095))
+            f = False
+            r = True
+        if f:
+            self._pca.set_pwm(self._fwd, 4096, 0)
+        else:
+            self._pca.set_pwm(self._fwd, 0, 4096)
+        if r:
+            self._pca.set_pwm(self._rev, 4096, 0)
+        else:
+            self._pca.set_pwm(self._rev, 0, 4096)
+               
+        self._pca.set_pwm(self._pwm, 0, s)
         #print("pulses = %0X" % s)
 
 
 class DriveTrain:
 
     def __init__(self, flpwm, flfwd, flrev, frpwm, frfwd, frrev, blpwm, blfwd, blrev, brpwm, brfwd, brrev, address = 0x40, frequency = 60):
-        # Create the I2C bus interface.
-        self.i2c_bus = busio.I2C(SCL, SDA)
-        # Create a simple PCA9685 class instance.
-        self.pca = PCA9685(self.i2c_bus, address=address)
+# Initialise the PCA9685 using the default address (0x40).
+        self.pca = Adafruit_PCA9685.PCA9685(address=address)
         # Set the PWM frequency
-        self.pca.frequency = frequency
+        self.pca.set_pwm_freq(frequency)
 
         #define motors
-        self.fl = Motor(self.pca.channels[flpwm], self.pca.channels[flfwd], self.pca.channels[flrev])
-        self.fr = Motor(self.pca.channels[frpwm], self.pca.channels[frfwd], self.pca.channels[frrev])
-        self.bl = Motor(self.pca.channels[blpwm], self.pca.channels[blfwd], self.pca.channels[blrev])
-        self.br = Motor(self.pca.channels[brpwm], self.pca.channels[brfwd], self.pca.channels[brrev])
+        self.fl = Motor(self.pca, flpwm, flfwd, flrev)
+        self.fr = Motor(self.pca, frpwm, frfwd, frrev)
+        self.bl = Motor(self.pca, blpwm, blfwd, blrev)
+        self.br = Motor(self.pca, brpwm, brfwd, brrev)
 
         #define wheelbase: 9in = 0.2286m
         self.wheelBase = 0.2286
