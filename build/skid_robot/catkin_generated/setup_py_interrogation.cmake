@@ -1,6 +1,0 @@
-set(skid_robot_SETUP_PY_VERSION "0.0.0")
-set(skid_robot_SETUP_PY_SCRIPTS "")
-set(skid_robot_SETUP_PY_PACKAGES "skid_robot")
-set(skid_robot_SETUP_PY_PACKAGE_DIRS "src/skid_robot")
-set(skid_robot_SETUP_PY_MODULES "")
-set(skid_robot_SETUP_PY_MODULE_DIRS "")
