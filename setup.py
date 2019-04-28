@@ -7,7 +7,7 @@ from catkin_pkg.python_setup import generate_distutils_setup
 setup_args = generate_distutils_setup(
     packages=['skid_robot'],
     package_dir={'': 'src'},
-    install_requires=[‘adafruit-pca9685’]
+    install_requires=['Adafruit-PCA9685']
 )
 
 setup(**setup_args)
