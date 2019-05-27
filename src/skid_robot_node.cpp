@@ -3,8 +3,17 @@
 
 #include <sstream>
 #include <iomanip>
+#include <wiringPi.h>
 
-#include "BNO080_I2C.h"
+#include "bno080_rvc.h"
+
+// --- Forward declarations -------------------------------------------
+
+static void callback(RvcReport_t *pReport);
+
+// --- Private data ---------------------------------------------------
+
+static RvcReport_t report;
 
 /**
  * This tutorial demonstrates simple sending of messages over the ROS system.
@@ -30,27 +39,28 @@ int main(int argc, char **argv)
      */
     ros::Rate loop_rate(50);
 
+    sensor_msgs::Imu msg;
+
     /**
      * BNO080 initialization
      */
-    BNO080 imu;
-    imu.enableDebugging();
-    imu.begin();
-    imu.enableAccelerometer(18);
+    bno080_rvc_init(UART_DEVICE, RSTN_GPIO_PIN, callback);
 
     while (ros::ok())
     {
-        if (imu.dataAvailable())
-        {
-            /**
-             * This is a message object. You stuff it with data, and then publish it.
-             */
-            sensor_msgs::Imu msg;
-            msg.linear_acceleration.x = imu.getAccelX();
-            msg.linear_acceleration.y = imu.getAccelY();
-            msg.linear_acceleration.z = imu.getAccelZ();
+        uint32_t timestamp = 0;
 
-            ROS_INFO_STREAM( "acc[" << std::setw(10) << imu.getTimeStamp() << "]: " << msg.linear_acceleration.x << " " << msg.linear_acceleration.y << " " << msg.linear_acceleration.z);
+        // fetch current status (exclusive)
+        piLock(0);
+        timestamp = report.timestamp;
+        msg.linear_acceleration.x = report.acc_x;
+        msg.linear_acceleration.y = report.acc_y;
+        msg.linear_acceleration.z = report.acc_z;
+        piUnlock(0);
+
+        if (timestamp > 0)
+        {
+            ROS_INFO_STREAM("acc[" << std::setw(10) << timestamp << "]: " << msg.linear_acceleration.x << " " << msg.linear_acceleration.y << " " << msg.linear_acceleration.z);
 
             /**
              * The publish() function is how you send messages. The parameter
@@ -60,12 +70,22 @@ int main(int argc, char **argv)
              */
             imu_pub.publish(msg);
         }
-
+ 
         ros::spinOnce();
 
         loop_rate.sleep();
     }
 
-
     return 0;
+}
+
+// ----------------------------------------------------------------------------------
+// Private functions
+// ----------------------------------------------------------------------------------
+
+void callback(RvcReport_t *pReport)
+{
+    piLock(0);
+    memcpy(&report, pReport, sizeof(RvcReport_t));
+    piUnlock(0);
 }

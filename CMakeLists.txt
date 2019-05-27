@@ -123,7 +123,7 @@ include_directories(
 
 ## Declare bno080 library
  add_library(bno080
-   bno080/BNO080_I2C.cpp
+   bno080/bno080_rvc.c
  )
 
 ## Add cmake target dependencies of the library
