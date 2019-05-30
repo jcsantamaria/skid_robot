@@ -1,5 +1,6 @@
-#include "ros/ros.h"
-#include "sensor_msgs/Imu.h"
+#include <ros/ros.h>
+#include <sensor_msgs/Imu.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <sstream>
 #include <iomanip>
@@ -14,6 +15,11 @@ static void callback(RvcReport_t *pReport);
 // --- Private data ---------------------------------------------------
 
 static RvcReport_t report;
+
+// --- Constants ------------------------------------------------------
+
+static const double DEG2RAD = M_PI / 180.0;
+static const double RAD2DEG = 180.0 / M_PI;
 
 /**
  * This tutorial demonstrates simple sending of messages over the ROS system.
@@ -40,6 +46,7 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(50);
 
     sensor_msgs::Imu msg;
+    msg.header.frame_id = "imu_link";
 
     /**
      * BNO080 initialization
@@ -53,9 +60,16 @@ int main(int argc, char **argv)
         // fetch current status (exclusive)
         piLock(0);
         timestamp = report.timestamp;
+
+        // set linear acceleration
         msg.linear_acceleration.x = report.acc_x;
         msg.linear_acceleration.y = report.acc_y;
         msg.linear_acceleration.z = report.acc_z;
+
+        // set orientation
+        tf2::Quaternion q_tf;
+        q_tf.setRPY(report.roll * DEG2RAD, report.pitch * DEG2RAD, report.yaw * DEG2RAD);
+        msg.orientation = tf2::toMsg(q_tf);
         piUnlock(0);
 
         if (timestamp > 0)
