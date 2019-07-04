@@ -1,3 +1,6 @@
+// bno080_rvc.h
+
+// include guard
 #ifndef BNO080_RVC_H
 #define BNO080_RVC_H
 

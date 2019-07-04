@@ -7,10 +7,11 @@
 #include <wiringPi.h>
 
 #include "bno080_rvc.h"
+#include "rotary_encoder.h"
 
 // --- Forward declarations -------------------------------------------
 
-static void callback(RvcReport_t *pReport);
+static void imu_callback(RvcReport_t *pReport);
 
 // --- Private data ---------------------------------------------------
 
@@ -20,6 +21,10 @@ static RvcReport_t report;
 
 static const double DEG2RAD = M_PI / 180.0;
 static const double RAD2DEG = 180.0 / M_PI;
+
+// -- motor 1 
+#define GPIO_QUAD_A 4      
+#define GPIO_QUAD_B 5
 
 /**
  * This tutorial demonstrates simple sending of messages over the ROS system.
@@ -51,7 +56,12 @@ int main(int argc, char **argv)
     /**
      * BNO080 initialization
      */
-    bno080_rvc_init(UART_DEVICE, RSTN_GPIO_PIN, callback);
+    bno080_rvc_init(UART_DEVICE, RSTN_GPIO_PIN, imu_callback);
+
+    /**
+     * Motor 1 encoders
+     */
+    struct Encoder *motor_1 = setup_encoder(GPIO_QUAD_A, GPIO_QUAD_B);
 
     while (ros::ok())
     {
@@ -74,7 +84,7 @@ int main(int argc, char **argv)
 
         if (timestamp > 0)
         {
-            ROS_INFO_STREAM("acc[" << std::setw(10) << timestamp << "]: " << msg.linear_acceleration.x << " " << msg.linear_acceleration.y << " " << msg.linear_acceleration.z);
+            //ROS_INFO_STREAM("acc[" << std::setw(10) << timestamp << "]: " << msg.linear_acceleration.x << " " << msg.linear_acceleration.y << " " << msg.linear_acceleration.z);
 
             /**
              * The publish() function is how you send messages. The parameter
@@ -84,7 +94,9 @@ int main(int argc, char **argv)
              */
             imu_pub.publish(msg);
         }
- 
+
+        ROS_INFO_STREAM("motor_1: " << motor_1->value);
+
         ros::spinOnce();
 
         loop_rate.sleep();
@@ -97,7 +109,7 @@ int main(int argc, char **argv)
 // Private functions
 // ----------------------------------------------------------------------------------
 
-void callback(RvcReport_t *pReport)
+void imu_callback(RvcReport_t *pReport)
 {
     piLock(0);
     memcpy(&report, pReport, sizeof(RvcReport_t));
