@@ -23,8 +23,12 @@ static const double DEG2RAD = M_PI / 180.0;
 static const double RAD2DEG = 180.0 / M_PI;
 
 // -- motor 1 
-#define GPIO_QUAD_A 4      
-#define GPIO_QUAD_B 5
+#define MOTOR1_QUAD_A 4      // GPIO 4: BCM 23 : P16
+#define MOTOR1_QUAD_B 5      // GPIO 5: BCM 24 : P18
+
+// -- motor 2 
+#define MOTOR2_QUAD_A 2      // GPIO 2: BCM 2 : P13
+#define MOTOR2_QUAD_B 3      // GPIO 3: BCM 3 : P15
 
 /**
  * This tutorial demonstrates simple sending of messages over the ROS system.
@@ -61,7 +65,14 @@ int main(int argc, char **argv)
     /**
      * Motor 1 encoders
      */
-    struct Encoder *motor_1 = setup_encoder(GPIO_QUAD_A, GPIO_QUAD_B);
+    struct Encoder *motor_1 = setup_encoder(MOTOR1_QUAD_A, MOTOR1_QUAD_B);
+
+    /**
+     * Motor 2 encoders: it is mounted in the opposite direction from motor 1
+     *                   therefore, the encoders are reversed to provide the same
+     *                   sign as motor 1
+     */
+    struct Encoder *motor_2 = setup_encoder(MOTOR2_QUAD_B, MOTOR2_QUAD_A);
 
     while (ros::ok())
     {
@@ -95,7 +106,9 @@ int main(int argc, char **argv)
             imu_pub.publish(msg);
         }
 
-        ROS_INFO_STREAM("motor_1: " << motor_1->value);
+        ROS_INFO_STREAM("motor_1: " << motor_1->value << "  motor_2: " << motor_2->value);
+        //ROS_INFO_STREAM("motor_1: " << motor_1->value);
+        //ROS_INFO_STREAM("motor_2: " << motor_2->value);
 
         ros::spinOnce();
 
