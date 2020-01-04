@@ -1,18 +1,22 @@
 <launch>
+
+  <!-- Load the parameters used by the following nodes -->
+  <rosparam command="load" file="$(find skid_robot)/param/base.yaml" />
+  
   <!-- drive_base node is responsible for subscribing to Twist commands and executing by controlling the wheel motors -->
-  <node pkg="skid_robot" type="drive_base_node.py" name="drive_base" output="screen">
+  <node name="drive_base" pkg="skid_robot" type="drive_base_node.py" output="screen">
     <param name="sensor_param" value="param_value" />
   </node>
 
   <!-- use static transform publisher to publish imu_link frame with respect to base_link 
        args: x y z yaw pitch roll frame_id child_frame_id
   -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="imu_link_broadcaster"
+  <node name="imu_link_broadcaster" pkg="tf2_ros" type="static_transform_publisher" 
         args="0 0 0.05 0 0 0 imu_link base_link">    
   </node>
 
-  <!-- publish sensor information: imu -->
-  <node pkg="skid_robot" type="skid_robot_node" name="sensor_broadcaster">
+  <!-- publish sensor information: imu, wheel encoders -->
+  <node name="sensor_base" pkg="skid_robot" type="skid_robot_node" >
   </node>
 
   <!--<node pkg="odom_node_pkg" type="odom_node_type" name="odom_node" output="screen">

@@ -48,6 +48,25 @@ int main(int argc, char **argv)
      */
     ros::NodeHandle nh;
 
+    /*
+     * Node parameters
+     */
+    double publishRate = 50.0;
+    nh.param<double>("/sensor_base/publish_rate", publishRate, 50.0);
+    bool   publish_odom = false;
+    nh.param<bool>("/sensor_base/enable_odom_tf", publish_odom, false);
+
+    /*
+     * Robot parameters
+     */
+    double wheelRadius = 0.123;     // 12.3 cm
+    double axelWidth   = 0.230;     // 23.0 cm
+    nh.param<double>("/sensor_base/wheel_radius", wheelRadius, 0.123);
+    nh.param<double>("/sensor_base/axel_width"  , axelWidth  , 0.230);
+
+    std::string base_frame_id = "base_link";
+    nh.param<std::string>("/sensor_base/base_frame_id", base_frame_id, "base_link");
+
     /**
      * Publish imu sensor
      */
@@ -59,9 +78,9 @@ int main(int argc, char **argv)
     ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 50);
 
     /**
-     * Frequency
+     * Node parameters
      */
-    ros::Rate loop_rate(50);
+    ros::Rate loop_rate(publishRate);
 
     /**
      * BNO080 initialization
@@ -79,12 +98,6 @@ int main(int argc, char **argv)
      *                   sign as motor 1
      */
     struct Encoder *motor_lft = setup_encoder(MOTOR_LFT_QUAD_B, MOTOR_LFT_QUAD_A);
-
-    /*
-     * Robot parameters
-     */
-    double wheelRadius = 0.123;     // 12.3 cm
-    double axelWidth   = 0.230;     // 23.0 cm
 
     /*
      * estimated pose of the robot according to wheel odometry
@@ -170,7 +183,7 @@ int main(int argc, char **argv)
             nav_msgs::Odometry odom;
             odom.header.stamp    = current_time;
             odom.header.frame_id = "odom";
-            odom.child_frame_id  = "base_link";
+            odom.child_frame_id  = base_frame_id.c_str();
 
             // set position
             odom.pose.pose.position.x  = x;
@@ -184,7 +197,7 @@ int main(int argc, char **argv)
             odom.twist.twist.linear.z = 0.0;
             odom.twist.twist.angular.z = yaw_speed;
 
-            ROS_INFO_STREAM("motor_rgt: " << motor_rgt->value << "  motor_lft: " << motor_lft->value);
+            //ROS_INFO_STREAM("motor_rgt: " << motor_rgt->value << "  motor_lft: " << motor_lft->value);
             //ROS_INFO_STREAM("motor_rgt: " << motor_rgt->value);
             //ROS_INFO_STREAM("motor_lft: " << motor_lft->value);
 
