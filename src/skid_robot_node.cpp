@@ -1,6 +1,8 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf/transform_datatypes.h>
+#include <nav_msgs/Odometry.h>
 
 #include <sstream>
 #include <iomanip>
@@ -23,12 +25,14 @@ static const double DEG2RAD = M_PI / 180.0;
 static const double RAD2DEG = 180.0 / M_PI;
 
 // -- motor 1 
-#define MOTOR1_QUAD_A 4      // GPIO 4: BCM 23 : P16
-#define MOTOR1_QUAD_B 5      // GPIO 5: BCM 24 : P18
+#define MOTOR_RGT_QUAD_A 4      // GPIO 4: BCM 23 : P16
+#define MOTOR_RGT_QUAD_B 5      // GPIO 5: BCM 24 : P18
 
 // -- motor 2 
-#define MOTOR2_QUAD_A 2      // GPIO 2: BCM 2 : P13
-#define MOTOR2_QUAD_B 3      // GPIO 3: BCM 3 : P15
+#define MOTOR_LFT_QUAD_A 2      // GPIO 2: BCM 2 : P13
+#define MOTOR_LFT_QUAD_B 3      // GPIO 3: BCM 3 : P15
+
+static const double TICK_PER_REV = 45 * 48;     // gear ratio * PPR (PULSE_PER_REV)
 
 /**
  * This tutorial demonstrates simple sending of messages over the ROS system.
@@ -42,20 +46,22 @@ int main(int argc, char **argv)
      * The first NodeHandle constructed will fully initialize this node, and the last
      * NodeHandle destructed will close down the node.
      */
-    ros::NodeHandle n;
+    ros::NodeHandle nh;
 
     /**
      * Publish imu sensor
      */
-    ros::Publisher imu_pub = n.advertise<sensor_msgs::Imu>("imu/data", 1000);
+    ros::Publisher imu_pub = nh.advertise<sensor_msgs::Imu>("imu/data", 50);
+
+    /**
+     * Publish Odometry sensor
+     */
+    ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 50);
 
     /**
      * Frequency
      */
     ros::Rate loop_rate(50);
-
-    sensor_msgs::Imu msg;
-    msg.header.frame_id = "imu_link";
 
     /**
      * BNO080 initialization
@@ -65,52 +71,127 @@ int main(int argc, char **argv)
     /**
      * Motor 1 encoders
      */
-    struct Encoder *motor_1 = setup_encoder(MOTOR1_QUAD_A, MOTOR1_QUAD_B);
+    struct Encoder *motor_rgt = setup_encoder(MOTOR_RGT_QUAD_A, MOTOR_RGT_QUAD_B);
 
     /**
      * Motor 2 encoders: it is mounted in the opposite direction from motor 1
      *                   therefore, the encoders are reversed to provide the same
      *                   sign as motor 1
      */
-    struct Encoder *motor_2 = setup_encoder(MOTOR2_QUAD_B, MOTOR2_QUAD_A);
+    struct Encoder *motor_lft = setup_encoder(MOTOR_LFT_QUAD_B, MOTOR_LFT_QUAD_A);
+
+    /*
+     * Robot parameters
+     */
+    double wheelRadius = 0.123;     // 12.3 cm
+    double axelWidth   = 0.230;     // 23.0 cm
+
+    /*
+     * estimated pose of the robot according to wheel odometry
+     */
+    double x = 0.0, y = 0.0, yaw = 0.0;
+
+    /*
+     * State keeping
+     */
+    long ticks_lft_last = 0;
+    long ticks_rgt_last = 0;
+
+    /*
+     * Time keeping
+     */
+    ros::Time     current_time = ros::Time::now();
+    ros::Time     last_time    = current_time;
+    ros::Duration elapsed;
 
     while (ros::ok())
     {
-        uint32_t timestamp = 0;
+        ros::spinOnce();    // check for incoming messages
 
-        // fetch current status (exclusive)
-        piLock(0);
-        timestamp = report.timestamp;
+        // track time
+        current_time = ros::Time::now();
+        elapsed      = current_time - last_time;
 
-        // set linear acceleration
-        msg.linear_acceleration.x = report.acc_x;
-        msg.linear_acceleration.y = report.acc_y;
-        msg.linear_acceleration.z = report.acc_z;
-
-        // set orientation
-        tf2::Quaternion q_tf;
-        q_tf.setRPY(report.roll * DEG2RAD, report.pitch * DEG2RAD, report.yaw * DEG2RAD);
-        msg.orientation = tf2::toMsg(q_tf);
-        piUnlock(0);
-
-        if (timestamp > 0)
+        // fetch and publish imu message
         {
-            //ROS_INFO_STREAM("acc[" << std::setw(10) << timestamp << "]: " << msg.linear_acceleration.x << " " << msg.linear_acceleration.y << " " << msg.linear_acceleration.z);
+            sensor_msgs::Imu imu;
+            imu.header.stamp    = current_time;
+            imu.header.frame_id = "imu_link";
 
-            /**
-             * The publish() function is how you send messages. The parameter
-             * is the message object. The type of this object must agree with the type
-             * given as a template parameter to the advertise<>() call, as was done
-             * in the constructor above.
-             */
-            imu_pub.publish(msg);
+            uint32_t timestamp = 0;
+
+            // fetch current imu status (exclusive)
+            piLock(0);
+            timestamp = report.timestamp;
+
+            // set linear acceleration
+            imu.linear_acceleration.x = report.acc_x;
+            imu.linear_acceleration.y = report.acc_y;
+            imu.linear_acceleration.z = report.acc_z;
+
+            // set orientation
+            tf2::Quaternion q_tf;
+            q_tf.setRPY(report.roll * DEG2RAD, report.pitch * DEG2RAD, report.yaw * DEG2RAD);
+            imu.orientation = tf2::toMsg(q_tf);
+            piUnlock(0);
+
+            if (timestamp > 0)
+            {
+                //ROS_INFO_STREAM("acc[" << std::setw(10) << timestamp << "]: " << msg.linear_acceleration.x << " " << msg.linear_acceleration.y << " " << msg.linear_acceleration.z);
+
+                /**
+                 * The publish() function is how you send messages. The parameter
+                 * is the message object. The type of this object must agree with the type
+                 * given as a template parameter to the advertise<>() call, as was done
+                 * in the constructor above.
+                 */
+                imu_pub.publish(imu);
+            }
         }
 
-        ROS_INFO_STREAM("motor_1: " << motor_1->value << "  motor_2: " << motor_2->value);
-        //ROS_INFO_STREAM("motor_1: " << motor_1->value);
-        //ROS_INFO_STREAM("motor_2: " << motor_2->value);
+        // fetch wheel encoders and compute odometry
+        {
+            // compute speed
+            double raw_speed_rgt = (motor_rgt->value - ticks_rgt_last) / TICK_PER_REV * 2.0 * M_PI * wheelRadius;
+            double raw_speed_lft = (motor_lft->value - ticks_lft_last) / TICK_PER_REV * 2.0 * M_PI * wheelRadius;
+            ticks_rgt_last = motor_rgt->value;
+            ticks_lft_last = motor_lft->value;
 
-        ros::spinOnce();
+            double fwd_speed = (raw_speed_lft + raw_speed_rgt) / 2.0;
+            double yaw_speed = (raw_speed_rgt - raw_speed_lft) / axelWidth;
+
+            // estimate position
+            double delta_t = elapsed.toSec();
+            x   += fwd_speed * cos(yaw) * delta_t;
+            y   += fwd_speed * sin(yaw) * delta_t;
+            yaw += yaw_speed * delta_t;
+
+            // form Odometry message
+            nav_msgs::Odometry odom;
+            odom.header.stamp    = current_time;
+            odom.header.frame_id = "odom";
+            odom.child_frame_id  = "base_link";
+
+            // set position
+            odom.pose.pose.position.x  = x;
+            odom.pose.pose.position.y  = y;
+            odom.pose.pose.position.z  = 0.0;
+            odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
+
+            // set velocity
+            odom.twist.twist.linear.x = fwd_speed;
+            odom.twist.twist.linear.y = 0.0;
+            odom.twist.twist.linear.z = 0.0;
+            odom.twist.twist.angular.z = yaw_speed;
+
+            ROS_INFO_STREAM("motor_rgt: " << motor_rgt->value << "  motor_lft: " << motor_lft->value);
+            //ROS_INFO_STREAM("motor_rgt: " << motor_rgt->value);
+            //ROS_INFO_STREAM("motor_lft: " << motor_lft->value);
+
+            odom_pub.publish(odom);
+        }
+
+        last_time = current_time;
 
         loop_rate.sleep();
     }

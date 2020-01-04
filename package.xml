@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>skid_robot</name>
-  <version>0.0.0</version>
+  <version>0.0.1</version>
   <description>The skid_robot package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
@@ -49,8 +49,10 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>tf</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>wiringPi</build_depend>
