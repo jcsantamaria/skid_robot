@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
+#include <tf2_ros/transform_broadcaster.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf/transform_datatypes.h>
 #include <nav_msgs/Odometry.h>
@@ -76,6 +77,11 @@ int main(int argc, char **argv)
      * Publish Odometry sensor
      */
     ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 50);
+
+    /**
+     * Publish tf
+     */
+    tf2_ros::TransformBroadcaster odom_broadcaster;
 
     /**
      * Node parameters
@@ -186,10 +192,12 @@ int main(int argc, char **argv)
             odom.child_frame_id  = base_frame_id.c_str();
 
             // set position
+            geometry_msgs::Quaternion base_q = tf::createQuaternionMsgFromYaw(yaw);
+
             odom.pose.pose.position.x  = x;
             odom.pose.pose.position.y  = y;
             odom.pose.pose.position.z  = 0.0;
-            odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
+            odom.pose.pose.orientation = base_q;
 
             // set velocity
             odom.twist.twist.linear.x = fwd_speed;
@@ -197,11 +205,27 @@ int main(int argc, char **argv)
             odom.twist.twist.linear.z = 0.0;
             odom.twist.twist.angular.z = yaw_speed;
 
+            odom_pub.publish(odom);
+
             //ROS_INFO_STREAM("motor_rgt: " << motor_rgt->value << "  motor_lft: " << motor_lft->value);
             //ROS_INFO_STREAM("motor_rgt: " << motor_rgt->value);
             //ROS_INFO_STREAM("motor_lft: " << motor_lft->value);
 
-            odom_pub.publish(odom);
+            if (publish_odom)
+            {
+                geometry_msgs::TransformStamped odom_trans;
+                odom_trans.header.stamp = current_time;
+                odom_trans.header.frame_id = "odom";
+                odom_trans.child_frame_id = base_frame_id.c_str();
+                
+                odom_trans.transform.translation.x = x;
+                odom_trans.transform.translation.y = y;
+                odom_trans.transform.translation.z = 0.0;
+                odom_trans.transform.rotation = base_q;
+
+                //send the transform
+                odom_broadcaster.sendTransform(odom_trans);
+            }
         }
 
         last_time = current_time;
