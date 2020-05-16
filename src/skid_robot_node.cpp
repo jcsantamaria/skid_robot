@@ -40,33 +40,38 @@ static const double TICK_PER_REV = 45 * 48;     // gear ratio * PPR (PULSE_PER_R
  */
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "skid_robot");
+    ros::init(argc, argv, "sensor_base");
 
     /**
      * NodeHandle is the main access point to communications with the ROS system.
      * The first NodeHandle constructed will fully initialize this node, and the last
      * NodeHandle destructed will close down the node.
      */
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
 
     /*
      * Node parameters
      */
     double publishRate = 50.0;
-    nh.param<double>("/sensor_base/publish_rate", publishRate, 50.0);
+    nh.param<double>("publish_rate", publishRate, 50.0);
     bool   publish_odom = false;
-    nh.param<bool>("/sensor_base/enable_odom_tf", publish_odom, false);
+    nh.param<bool>("enable_odom_tf", publish_odom, false);
 
     /*
      * Robot parameters
      */
     double wheelRadius = 0.123;     // 12.3 cm
     double axelWidth   = 0.230;     // 23.0 cm
-    nh.param<double>("/sensor_base/wheel_radius", wheelRadius, 0.123);
-    nh.param<double>("/sensor_base/axel_width"  , axelWidth  , 0.230);
+    nh.param<double>("wheel_radius", wheelRadius, 0.123);
+    nh.param<double>("axel_width"  , axelWidth  , 0.230);
 
     std::string base_frame_id = "base_link";
-    nh.param<std::string>("/sensor_base/base_frame_id", base_frame_id, "base_link");
+    nh.param<std::string>("base_frame_id", base_frame_id, "base_link");
+    // base_frame_id = nh.resolveName(base_frame_id);
+
+    // std::cout << "base_frame  : " << base_frame_id << std::endl;
+    // std::cout << "wheel_radius: " << wheelRadius   << std::endl;
+    // std::cout << "axel_width  : " << axelWidth     << std::endl;
 
     /**
      * Publish imu sensor
