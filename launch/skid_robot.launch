@@ -12,7 +12,7 @@
        args: x y z yaw pitch roll frame_id child_frame_id
   -->
   <node name="imu_link_broadcaster" pkg="tf2_ros" type="static_transform_publisher" 
-        args="0 0 0.05 0 0 0 imu_link base_link">    
+        args="0 0 0.05 0 0 0 base_link imu_link">    
   </node>
 
   <!-- publish sensor information: imu, wheel encoders -->
