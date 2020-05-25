@@ -213,8 +213,6 @@ int main(int argc, char **argv)
             odom_pub.publish(odom);
 
             //ROS_INFO_STREAM("motor_rgt: " << motor_rgt->value << "  motor_lft: " << motor_lft->value);
-            //ROS_INFO_STREAM("motor_rgt: " << motor_rgt->value);
-            //ROS_INFO_STREAM("motor_lft: " << motor_lft->value);
 
             if (publish_odom)
             {
