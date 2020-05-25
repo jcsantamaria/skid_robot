@@ -11,9 +11,8 @@
 
     <!-- teleop_twist_node -->
     <node pkg="teleop_twist_joy" name="teleop_twist_joy" type="teleop_node">
-    
-    <!-- Load the parameters used by the following nodes -->
-    <rosparam command="load" file="$(arg config_filepath)" />
-  </node>
+        <!-- Load the parameters used by the following nodes -->
+        <rosparam command="load" file="$(arg config_filepath)" />
+    </node>
 
 </launch>
