@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#import roslib; roslib.load_manifest('skid_robot')
+# import roslib; roslib.load_manifest('skid_robot')
 
 import sys
 import argparse
@@ -11,7 +11,8 @@ from drivetrain import DriveTrain
 # function to parse command-line arguments
 def get_args(args):
     parser = argparse.ArgumentParser(description='Run the drive_base ROS node')
-    parser.add_argument('-v', '--verbose', help='increase output verbosity', action='store_true')    
+    parser.add_argument('-v', '--verbose',
+                        help='increase output verbosity', action='store_true')
     args, unknown = parser.parse_known_args()
     return args
 
@@ -19,9 +20,11 @@ def get_args(args):
 # Robot drive train: channels for each motor controller
 train = DriveTrain(4, 6, 5, 10, 12, 11, 9, 7, 8, 15, 14, 13)
 
+
 def callback(data):
-    #rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data)
-    train.drive( data.linear.x, data.angular.z)
+    # rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data)
+    train.drive(data.linear.x, data.angular.z)
+
 
 def drive_base_node(argv):
 
@@ -30,6 +33,8 @@ def drive_base_node(argv):
 
     # get parameters
     cmdTopic = rospy.resolve_name(rospy.get_param('~command', 'cmd_vel'))
+    train.wheelBase = rospy.get_param('/axel_width', train.wheelBase)
+    train.wheelRadius = rospy.get_param('/wheel_radius', train.wheelRadius)
 
     # In ROS, nodes are uniquely named. If two nodes with the same
     # name are launched, the previous one is kicked off. The
@@ -38,14 +43,17 @@ def drive_base_node(argv):
     # run simultaneously.
     rospy.init_node('drive_base', anonymous=False, log_level=rospy.DEBUG)
 
-    print('configuration:')
-    print('    node: {0}'.format(rospy.get_name()))
-    print('    {0}: {1}'.format(rospy.resolve_name('~command'), cmdTopic))
+    print('{0}:'.format(rospy.get_name()))
+    print('    wheelBase  : {0}'.format(train.wheelBase))
+    print('    wheelRadius: {0}'.format(train.wheelRadius))
+    print('    {0}        : {1}'.format(
+        rospy.resolve_name('~command'), cmdTopic))
 
     rospy.Subscriber(cmdTopic, Twist, callback)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
+
 
 if __name__ == '__main__':
     try:

@@ -1,9 +1,7 @@
+axel_width   : 0.2286
+wheel_radius : 0.0635
+
 sensor_base:
   publish_rate: 50
-
   enable_odom_tf: true
-
-  axel_width   : 0.230
-  wheel_radius : 0.123
-
   base_frame_id: base_link

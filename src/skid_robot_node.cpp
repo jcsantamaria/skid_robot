@@ -62,16 +62,17 @@ int main(int argc, char **argv)
      */
     double wheelRadius = 0.123;     // 12.3 cm
     double axelWidth   = 0.230;     // 23.0 cm
-    nh.param<double>("wheel_radius", wheelRadius, 0.123);
-    nh.param<double>("axel_width"  , axelWidth  , 0.230);
+    nh.param<double>("/wheel_radius", wheelRadius, wheelRadius);
+    nh.param<double>("/axel_width"  , axelWidth  , axelWidth);
 
     std::string base_frame_id = "base_link";
     nh.param<std::string>("base_frame_id", base_frame_id, "base_link");
     // base_frame_id = nh.resolveName(base_frame_id);
 
-    // std::cout << "base_frame  : " << base_frame_id << std::endl;
-    // std::cout << "wheel_radius: " << wheelRadius   << std::endl;
-    // std::cout << "axel_width  : " << axelWidth     << std::endl;
+    std::cout << nh.resolveName("") << ":" << std::endl;
+    std::cout << "    base_frame  : " << base_frame_id << std::endl;
+    std::cout << "    wheel_radius: " << wheelRadius   << std::endl;
+    std::cout << "    axel_width  : " << axelWidth     << std::endl;
 
     /**
      * Publish imu sensor
