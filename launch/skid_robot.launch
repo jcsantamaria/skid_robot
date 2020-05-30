@@ -16,7 +16,7 @@
   </node>
 
   <!-- publish sensor information: imu, wheel encoders -->
-  <node pkg="skid_robot" type="skid_robot_node" name="sensor_base" >
+  <node pkg="skid_robot" type="skid_robot_node" name="sensor_base" output="screen" >
   </node>
 
   <!-- twist_mux node dies unexpectedly on ubuntu -->
