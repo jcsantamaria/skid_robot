@@ -1,0 +1,12 @@
+<launch>
+
+  <!-- Load the parameters used by the following nodes -->
+  <arg name="config_filepath" default="$(find skid_robot)/param/move_basic.yaml" />
+  
+  <!-- drive_base node is responsible for subscribing to Twist commands and executing by controlling the wheel motors -->
+  <node pkg="move_basic" type="move_basic" name="move_basic" output="screen">
+        <!-- Load the parameters used by the following nodes -->
+        <rosparam command="load" file="$(arg config_filepath)" />
+  </node>
+
+</launch>
