@@ -5,9 +5,11 @@ from catkin_pkg.python_setup import generate_distutils_setup
 
 # fetch values from package.xml
 setup_args = generate_distutils_setup(
-    packages=['skid_robot'],
+    # packages=['skid_robot'],
+    # package_dir={'': 'src'},
+    # install_requires=['Adafruit-PCA9685']
+    packages=['roboclaw_driver'],
     package_dir={'': 'src'},
-    install_requires=['Adafruit-PCA9685']
 )
 
 setup(**setup_args)

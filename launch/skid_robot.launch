@@ -5,7 +5,6 @@
   
   <!-- drive_base node is responsible for subscribing to Twist commands and executing by controlling the wheel motors -->
   <node pkg="skid_robot" type="drive_base_node.py" name="drive_base" output="screen">
-    <param name="command" value="cmd_vel" />
   </node>
 
   <!-- use static transform publisher to publish imu_link frame with respect to base_link 
