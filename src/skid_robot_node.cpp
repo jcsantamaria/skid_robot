@@ -177,8 +177,9 @@ int main(int argc, char **argv)
         // fetch wheel encoders and compute odometry
         {
             // compute speed
-            double raw_speed_rgt = (motor_rgt->value - ticks_rgt_last) / TICK_PER_REV * 2.0 * M_PI * wheelRadius;
-            double raw_speed_lft = (motor_lft->value - ticks_lft_last) / TICK_PER_REV * 2.0 * M_PI * wheelRadius;
+            double delta_t = elapsed.toSec();
+            double raw_speed_rgt = (motor_rgt->value - ticks_rgt_last) / TICK_PER_REV * 2.0 * M_PI * wheelRadius / delta_t;
+            double raw_speed_lft = (motor_lft->value - ticks_lft_last) / TICK_PER_REV * 2.0 * M_PI * wheelRadius / delta_t;
             ticks_rgt_last = motor_rgt->value;
             ticks_lft_last = motor_lft->value;
 
@@ -186,7 +187,6 @@ int main(int argc, char **argv)
             double yaw_speed = (raw_speed_rgt - raw_speed_lft) / axelWidth;
 
             // estimate position
-            double delta_t = elapsed.toSec();
             x   += fwd_speed * cos(yaw) * delta_t;
             y   += fwd_speed * sin(yaw) * delta_t;
             yaw += yaw_speed * delta_t;

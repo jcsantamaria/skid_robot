@@ -5,8 +5,8 @@ from __future__ import division
 import Adafruit_PCA9685
 
 # Constants
-FRONT_MAX_RPM = 80
-REAR_MAX_RPM = 108
+FRONT_MAX_RPM = 1600
+REAR_MAX_RPM = 2160
 
 
 class Motor:
