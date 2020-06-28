@@ -116,9 +116,9 @@ class EncoderOdom:
 
         odom.pose.covariance[0] = 0.01
         odom.pose.covariance[7] = 0.01
-        odom.pose.covariance[14] = 99999
-        odom.pose.covariance[21] = 99999
-        odom.pose.covariance[28] = 99999
+        # odom.pose.covariance[14] = 99999
+        # odom.pose.covariance[21] = 99999
+        # odom.pose.covariance[28] = 99999
         odom.pose.covariance[35] = 0.01
 
         odom.child_frame_id = 'base_link'
@@ -151,7 +151,7 @@ class Node:
                        0x4000: (diagnostic_msgs.msg.DiagnosticStatus.OK, "M1 home"),
                        0x8000: (diagnostic_msgs.msg.DiagnosticStatus.OK, "M2 home")}
 
-        rospy.init_node("drive_base_node")
+        rospy.init_node("drive_base_node", anonymous = False)
         rospy.on_shutdown(self.shutdown)
         rospy.loginfo("Connecting to roboclaws")
         dev_name = rospy.get_param("~dev", "/dev/ttyAMA0")
@@ -305,35 +305,37 @@ class Node:
             r_time.sleep()
 
     def cmd_vel_callback(self, twist):
-        self.last_set_speed_time = rospy.get_rostime()
 
-        linear_x = twist.linear.x
-        if linear_x > self.MAX_SPEED:
-            linear_x = self.MAX_SPEED
-        if linear_x < -self.MAX_SPEED:
-            linear_x = -self.MAX_SPEED
+        if (rospy.get_rostime() - self.last_set_speed_time).to_sec() > 0.1:
+            self.last_set_speed_time = rospy.get_rostime()
 
-        vr = linear_x + twist.angular.z * (self.BASE_WIDTH + self.BASE_LENGTH)  # m/s
-        vl = linear_x - twist.angular.z * (self.BASE_WIDTH + self.BASE_LENGTH)
+            linear_x = twist.linear.x
+            if linear_x > self.MAX_SPEED:
+                linear_x = self.MAX_SPEED
+            if linear_x < -self.MAX_SPEED:
+                linear_x = -self.MAX_SPEED
 
-        vr_ticks = int(vr * self.TICKS_PER_METER)  # ticks/s
-        vl_ticks = int(vl * self.TICKS_PER_METER)
+            vr = linear_x + twist.angular.z * (self.BASE_WIDTH + self.BASE_LENGTH)  # m/s
+            vl = linear_x - twist.angular.z * (self.BASE_WIDTH + self.BASE_LENGTH)
 
-        rospy.logdebug("vr_ticks:%d vl_ticks: %d", vr_ticks, vl_ticks)
+            vr_ticks = int(vr * self.TICKS_PER_METER)  # ticks/s
+            vl_ticks = int(vl * self.TICKS_PER_METER)
 
-        try:
-            # This is a hack way to keep a poorly tuned PID from making noise at speed 0
-            if vr_ticks is 0 and vl_ticks is 0:
-                roboclaw.ForwardM1(self.rear_address, 0)    # left
-                roboclaw.ForwardM2(self.rear_address, 0)    # right
-                roboclaw.ForwardM1(self.front_address, 0)   # left
-                roboclaw.ForwardM2(self.front_address, 0)   # right
-            else:
-                roboclaw.SpeedM1M2(self.rear_address , vl_ticks, vr_ticks)
-                roboclaw.SpeedM1M2(self.front_address, vl_ticks, vr_ticks)
-        except OSError as e:
-            rospy.logwarn("Rear SpeedM1M2 OSError: %d", e.errno)
-            rospy.logdebug(e)
+            # rospy.logdebug("vr_ticks:%d vl_ticks: %d", vr_ticks, vl_ticks)
+
+            try:
+                # This is a hack way to keep a poorly tuned PID from making noise at speed 0
+                if vr_ticks is 0 and vl_ticks is 0:
+                    roboclaw.ForwardM1(self.rear_address, 0)    # left
+                    roboclaw.ForwardM2(self.rear_address, 0)    # right
+                    roboclaw.ForwardM1(self.front_address, 0)   # left
+                    roboclaw.ForwardM2(self.front_address, 0)   # right
+                else:
+                    roboclaw.SpeedM1M2(self.rear_address , vl_ticks, vr_ticks)
+                    roboclaw.SpeedM1M2(self.front_address, vl_ticks, vr_ticks)
+            except OSError as e:
+                rospy.logwarn("Rear SpeedM1M2 OSError: %d", e.errno)
+                rospy.logdebug(e)
 
     # TODO: Need to make this work when more than one error is raised
     def check_rear_vitals(self, stat):

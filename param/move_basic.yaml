@@ -1,9 +1,9 @@
 min_angular_velocity: 0.05                # The minimum speed for rotation in radians/sec.
-max_angular_velocity: 1.0                 # The maximum speed for rotation in radians/sec.
+max_angular_velocity: 0.8                 # The maximum speed for rotation in radians/sec.
 angular_acceleration: 0.3                 # The rate to ramp between min_angular_velocity and max_angular_velocity when starting and stopping rotation.
 angular_tolerance: 0.01                   # The maximum angular error that will be deemed successful.
 min_linear_velocity: 0.1                  # The minimum speed for linear movement in meters/sec.
-max_linear_velocity: 0.5                  # The maximum speed for linear movement in meters/sec.
+max_linear_velocity: 0.4                  # The maximum speed for linear movement in meters/sec.
 linear_acceleration: 0.25                 # The rate to ramp between min_linear_velocity and max_linear_velocity when starting and stopping linear movement.
 linear_tolerance: 0.01                    # The maximum linear error that will be deemed successful.
 localization_latency: 0.5                 # How long (in seconds) to pause between each movement step to ensure localization is accurate.
@@ -13,4 +13,4 @@ reverse_without_turning_threshold: 0.5    # An upper threshold in meters for mov
 map_frame: odom                           # Name of the global frame.
 robot_width: 0.35                         # Distance from base_link to the side of the robot, ie half the width.
 robot_front_length: 0.11                  # Distance from base_link the front-most part of the robot.
-robot_back_length: 0.21                   # Distance from base_link the rear-most part of the robot.
+robot_back_length: 0.11                   # Distance from base_link the rear-most part of the robot.
