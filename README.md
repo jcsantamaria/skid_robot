@@ -42,4 +42,4 @@ Licensed under the [MIT] license.
    [QwiicCable]: https://www.sparkfun.com/products/14425
    [Battery]: https://www.amazon.com/gp/product/B007RQW5WG/ref=ppx_yo_dt_b_search_asin_image?ie=UTF8&psc=1
    [ROS-image]: https://downloads.ubiquityrobotics.com/pi.html
-   [MIT]: (LICENSE)
+   [MIT]: LICENSE
