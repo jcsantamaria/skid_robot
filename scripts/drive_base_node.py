@@ -19,6 +19,7 @@ class EncoderOdom:
         self.TICKS_PER_METER = ticks_per_meter
         self.BASE_WIDTH = base_width
         self.BASE_LENGTH = base_length
+        self.DIAGNOSTIC = True
         self.odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
         self.cur_x = 0
         self.cur_y = 0
@@ -221,6 +222,7 @@ class Node:
         self.TICKS_PER_METER = float(rospy.get_param("~tick_per_meter", "1634.2"))
         self.BASE_WIDTH      = float(rospy.get_param("~axel_width"    ,    "0.233"))
         self.BASE_LENGTH     = float(rospy.get_param("~axel_length"   ,    "0.142"))
+        self.DIAGNOSTIC      = bool(rospy.get_param ("~diagnostic"    ,    "true"))
 
         # instantiate encoder
         self.encodm = EncoderOdom(self.TICKS_PER_METER, self.BASE_WIDTH, self.BASE_LENGTH)
@@ -239,6 +241,7 @@ class Node:
         rospy.loginfo("ticks_per_meter : %f", self.TICKS_PER_METER)
         rospy.loginfo("base_width      : %f", self.BASE_WIDTH)
         rospy.loginfo("base_length     : %f", self.BASE_LENGTH)
+        rospy.loginfo("diagnostic      : %s", self.DIAGNOSTIC)
 
     def run(self):
         rospy.loginfo("Starting motor drive")
@@ -301,7 +304,9 @@ class Node:
                 rospy.logdebug(" Encoders rear: %s %s  front: %s %s", rear_enc1, rear_enc2, front_enc1, front_enc2)
                 self.encodm.update_publish(rear_enc1, rear_enc2, front_enc1, front_enc2)
 
-                self.updater.update()
+                if (self.DIAGNOSTIC):
+                    self.updater.update()
+
             r_time.sleep()
 
     def cmd_vel_callback(self, twist):

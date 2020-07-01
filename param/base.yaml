@@ -11,3 +11,4 @@ drive_base:
   rear_address  : 129
   front_address : 128
   tick_per_meter: 5413.17  # gear_ration * pulse_per_rev / (2 * PI * wheel_radius) = 45 * 48 / (2.0 * 3.141592 * 0.0635)
+  diagnostic    : false
