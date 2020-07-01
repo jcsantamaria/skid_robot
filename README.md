@@ -16,18 +16,18 @@ The following is a list of all the hardware components used in this project:
 - 1x Rechargable Lithium-Ion Battery: [Battery]
 
 ### 3D Printed parts
-- Raspberry PI base
-- Component base
+- Raspberry PI base: [pi_back.stl]
+- Components plate: [skid-robot-top-plate-base.stl] and [skid-robot-top-plate-top.stl]
 
 ## Software Components
 
-The software platform is basically ROS.  There are several platforms available to load on a Raspberry PI. I chose the one offered by Ubiquity Robotics ([ROS-image]). Their image is based on Ubuntu and uses pifi to manage the WiFi network. They provide nice documentation on how to install the image along with troubleshooting tips.
+The software platform is basically ROS.  There are several platforms available to load on a Raspberry PI. I chose the one offered by Ubiquity Robotics ([ROS image]). Their image is based on Ubuntu and uses pifi to manage the WiFi network. They provide nice documentation on how to install the image along with troubleshooting tips.
 
 ## License
 
 Copyright (c) 2019 Juan C. Santamaria. All rights reserved.
 
-Licensed under the [MIT] license.
+Licensed under the [MIT license].
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job.)
    [ROS]: https://www.ros.org/
@@ -41,5 +41,8 @@ Licensed under the [MIT] license.
    [EzConnect]: https://www.adafruit.com/product/2711
    [QwiicCable]: https://www.sparkfun.com/products/14425
    [Battery]: https://www.amazon.com/gp/product/B007RQW5WG/ref=ppx_yo_dt_b_search_asin_image?ie=UTF8&psc=1
-   [ROS-image]: https://downloads.ubiquityrobotics.com/pi.html
-   [MIT]: LICENSE
+   [ROS image]: https://downloads.ubiquityrobotics.com/pi.html
+   [MIT license]: LICENSE
+   [pi_back.stl]: models/pi_back.stl
+   [skid-robot-top-plate-base.stl]: models/skid-robot-top-plate-base.stl
+   [skid-robot-top-plate-top.stl]: models/skid-robot-top-plate-top.stl
